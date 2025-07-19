@@ -23,6 +23,8 @@ def create_app():
     CORS(app)
     JWTManager(app)
 
+    from backend.app import models
+
    
 
     return app

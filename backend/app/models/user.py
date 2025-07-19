@@ -1,8 +1,9 @@
 from backend.app import db
 from werkzeug.security import generate_password_hash,check_password_hash
 from datetime import datetime
+from sqlalchemy_serializer import SerializerMixin
 
-class User(db.Model):
+class User(db.Model,SerializerMixin):
     __tablename__='users'
 
     id=db.Column(db.Integer,primary_key=True)
@@ -21,30 +22,15 @@ class User(db.Model):
 
 
     assessments=db.relationship('Assessment',backref='recruiter',lazy='select')
-    responses=db.relationship('Response',backref='interviewee',lazy='select')
+    responses=db.relationship('Response',backref='user',lazy='select')
 
     def set_password(self,password):
         self.password_hash= generate_password_hash(password)
 
     def check_password(self,password):
         return check_password_hash(self.password_hash,password) 
-
-
-    def serialize(self):
-        return {
-            "id":self.id,
-            "username":self.username,
-            "email":self.email,
-            "role":self.role,
-            "profile_picture_url":self.profile_picture_url,
-            "bio":self.bio,
-            "about_me":self.about_me,
-            "company_name":self.company_name,
-            "skills":self.skills,
-            "is_active":self.is_active,
-            "created_at":self.created_at,
-            "updated_at":self.updated_at
-        }   
+  
 
     def __repr__(self):
-        return f"<User id={self.id},username='{self.username}',role='{self.role}',active={self.is_active}>"
+        return f"<User id={self.id},username='{self.username}',email='{self.email}',role='{self.role}>"
+    
