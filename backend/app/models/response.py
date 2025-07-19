@@ -1,5 +1,5 @@
 from datetime import datetime
-from app import db
+from backend.app import db
 from sqlalchemy_serializer import SerializerMixin
 
 class Response(db.Model,SerializerMixin):
