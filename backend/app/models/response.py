@@ -7,7 +7,7 @@ class Response(db.Model,SerializerMixin):
 
     id=db.Column(db.Integer,primary_key=True)
     user_id=db.Column(db.Integer, db.ForeignKey('users.id'),nullable=False)
-    assessment_id=db.Column(db.Integer,db.ForeignKey('assessments.id',nullable=False))
+    assessment_id=db.Column(db.Integer,db.ForeignKey('assessments.id'),nullable=False)
     submitted_at=db.Column(db.DateTime,default=datetime.utcnow)
     score=db.Column(db.Float,nullable=True)
     feedback=db.Column(db.Text,nullable=True)

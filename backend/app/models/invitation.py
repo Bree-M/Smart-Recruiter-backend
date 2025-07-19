@@ -7,12 +7,12 @@ class Invitation(db.Model,SerializerMixin):
     __tablename__='invitations'
 
     id=db.Column(db.Integer,primary_key=True)
-    assessment_id=db.Column(db.Integer,db.ForeignKey('assessments.id',nullable=False))
+    assessment_id=db.Column(db.Integer,db.ForeignKey('assessments.id'),nullable=False)
     interviewee_id=db.Column(db.Integer,db.ForeignKey('users.id'),nullable=False)
-    recruiter_id=db.Column(db.Integer,db.ForeignKey('users.id',nullable=True))
+    recruiter_id=db.Column(db.Integer,db.ForeignKey('users.id'),nullable=True)
     status=db.Column(db.String(50),default='pending')
     token=db.Column(db.String(300),unique=True,index=True,default=lambda:secrets.token_urlsafe(50))
-    token_used_at=db.Column(db.Column(db.DateTime,nullable=True))
+    token_used_at=db.Column(db.DateTime,nullable=True)
     is_active=db.Column(db.Boolean,default=True)
     invited_via=db.Column(db.String(50),default='email')
     invitation_message=db.Column(db.Text,nullable=True)
