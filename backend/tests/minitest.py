@@ -1,4 +1,4 @@
-from backend.app import app,db
+from backend.app import create_app,db
 from backend.app.models.user import User
 from backend.app.models.assessment import Assessment
 from backend.app.models.question import Question
@@ -7,6 +7,8 @@ from backend.app.models.response import Response
 
 def run_tests():
     print("Smart Recruiter Minitests running...")
+
+    app=create_app()
 
     with app.app_context():
         try:
@@ -20,21 +22,21 @@ def run_tests():
             assessments=Assessment.query.all()
             assert assessments, "No assessment found!"
             for assess in assessments:
-                print(f"{assess.title} | Duration: {assess.duration} mins | Owner: {assess.recruiter_id}")
+                print(f"{assess.title} | Time_Limit: {assess.time_limit} mins | Owner: {assess.recruiter_id}")
 
 
             print("\n Running Question Tests...")
             questions=Question.query.all()
             assert questions, "No questions found!"
             for q in questions:
-                print(f"{q.title} [{q.question_type}] | Assessment ID: {q.assessment_id}")
+                print(f"{q.question} [{q.question_type}] | Assessment ID: {q.assessment_id}")
 
 
             print("\n Running Invitation Tests")    
             invites=Invitation.query.all()
             assert invites, "No invitations found!"
             for i in invites:
-                print(f"Invite to user {i.interviewee_id} for Assessment {i.assessement_id} | Status: {i.status}")
+                print(f"Invite to user {i.interviewee_id} for Assessment {i.assessment_id} | Status: {i.status}")
                 
 
             print("\n Running Response Tests")    

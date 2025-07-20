@@ -29,7 +29,7 @@ class Invitation(db.Model,SerializerMixin):
 
     interviewee=db.relationship('User',foreign_keys=[interviewee_id])
     recruiter=db.relationship('User',foreign_keys=[recruiter_id])
-    assessment=db.relationship('Assessment',foreign_keys=[assessment_id])
+    
 
     def __repr__(self):
         return (

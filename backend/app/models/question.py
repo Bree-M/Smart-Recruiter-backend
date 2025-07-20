@@ -10,7 +10,7 @@ class Question(db.Model,SerializerMixin):
     question=db.Column(db.String(275),nullable=False)
     question_type=db.Column(db.String(100),default='multiple_choice',nullable=False)
     correct_answer=db.Column(db.String(250),nullable=True)
-    mark=db.Column(db.Integer,nullable=False)
+    mark=db.Column(db.Integer,nullable=False,default=1)
     difficulty=db.Column(db.String(50))
     input_format=db.Column(db.Text)
     output_format=db.Column(db.Text)
@@ -22,9 +22,6 @@ class Question(db.Model,SerializerMixin):
     created_at=db.Column(db.DateTime,default=datetime.utcnow)
     updated_at=db.Column(db.DateTime,default=datetime.utcnow,onupdate=datetime.utcnow)
     
-    
-
-    choices=db.relationship('Choice',backref='question',lazy='select',cascade='all,delete-orphan')
 
 
     def __repr__(self):

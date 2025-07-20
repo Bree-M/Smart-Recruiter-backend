@@ -5,6 +5,7 @@ from backend.app.models.assessment import Assessment
 from backend.app.models.question import Question
 from backend.app.models.invitation import Invitation
 from backend.app import create_app
+from werkzeug.security import generate_password_hash
 
 app=create_app()
 
@@ -13,9 +14,11 @@ with app.app_context():
     db.create_all()
 
     def users():
-        user1=User(username="Renee",email="renee@dev.com",role="recruiter")
-        user2=User(username="Sapphire",email="sapphire@info.com",role="interviewee")
-        db.session.add_all(user1,user2)
+        user1=User(username="Renee",email="renee@dev.com",role="recruiter",is_active=True)
+        user1.password_hash= generate_password_hash("renee1234")
+        user2=User(username="Sapphire",email="sapphire@info.com",role="interviewee",is_active=True)
+        user2.password_hash= generate_password_hash("sapphire1234")
+        db.session.add_all([user1,user2])
         db.session.commit()
         return user1,user2
     
@@ -23,8 +26,8 @@ with app.app_context():
         assessment1=Assessment(
             title="Python Basics",
             description="Assessment on basic python knowledge",
-            duration_minutes=45,
-            created_by=recruiter.id
+            time_limit=45,
+            recruiter_id=recruiter.id
         )
         db.session.add(assessment1)
         db.session.commit()
@@ -35,6 +38,7 @@ with app.app_context():
             question="What is the output of the print(2**3)?",
             question_type="multiple_choice",
             correct_answer="8",
+            mark=5,
             difficulty="easy",
             assessment_id=assessment.id
         )
@@ -42,7 +46,7 @@ with app.app_context():
         db.session.commit()
         return q1
     
-    def invitations(interviewee,recruiter,assessment):
+    def invitations(interviewee, recruiter, assessment):
         invite=Invitation(
             interviewee_id=interviewee.id,
             recruiter_id=recruiter.id,
@@ -55,10 +59,10 @@ with app.app_context():
         db.session.commit()
         return invite
         
-        recruiter,interviewee=users()
-        assessments=assessments(recruiter)
-        questions=questions(assessment)
-        invite=invitations(interviewee,recruiter,assessment)
+    recruiter, interviewee=users()
+    assessment=assessments(recruiter)
+    questions=questions(assessment)
+    invite=invitations(interviewee,recruiter,assessment)
         
 
-        print("Seeding complete")
+    print("Seeding complete")
