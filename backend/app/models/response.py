@@ -18,6 +18,7 @@ class Response(db.Model,SerializerMixin):
     passed=db.Column(db.Boolean,nullable=True)
     code_submission=db.Column(db.Text,nullable=True)
     graded_at=db.Column(db.DateTime,nullable=True)
+    answer_text=db.Column(db.Text,nullable=True)
 
 
 
