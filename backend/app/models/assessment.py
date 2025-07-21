@@ -21,3 +21,4 @@ class Assessment(db.Model,SerializerMixin):
 
     def __repr__(self):
         return f"<Assessment id={self.id},title='{self.title}'difficulty={self.difficulty},recruiter_id={self.recruiter_id}>"
+        l
