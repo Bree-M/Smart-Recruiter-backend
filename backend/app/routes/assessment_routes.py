@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.models import db, Assessment
+from backend.app.models import db, Assessment
 
 assessment_bp = Blueprint('assessments', __name__, url_prefix='/assessments')
 

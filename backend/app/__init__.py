@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
@@ -24,6 +24,21 @@ def create_app():
     JWTManager(app)
 
     from backend.app import models
+    from backend.app.routes.auth_routes import auth_bp
+    from backend.app.routes.assessment_routes import assessment_bp
+    from backend.app.routes.recruiter_routes import recruiter_bp
+    from backend.app.routes.interviewee_routes import interviewee_bp
+    from backend.app.routes.codewars_routes import codewars_routes 
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(assessment_bp)
+    app.register_blueprint(recruiter_bp)
+    app.register_blueprint(interviewee_bp)
+    app.register_blueprint(codewars_routes)
+    
+
+    @app.route("/")
+    def index():
+        return jsonify({"message":"Smart Rcruiter is live!"})
 
    
 
