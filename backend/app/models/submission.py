@@ -18,7 +18,7 @@ class Submission(db.Model):
 
     # interviewee=db.relationship('User',backref='submissions')
     # assessment=db.relationship('Assessment',backref='submissions')
-    responses=db.relationship('Response',backref='submission')
+    responses=db.relationship('Response',backref='submission',cascade="all,delete-orphan")
 
     serialize_rules=('-interviewee.submissions','-assessment.submissions','-responses',)
 

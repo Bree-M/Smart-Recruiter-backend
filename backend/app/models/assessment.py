@@ -7,18 +7,16 @@ class Assessment(db.Model,SerializerMixin):
 
     id=db.Column(db.Integer,primary_key=True)
     title=db.Column(db.String(200),nullable=False)
-    description=db.Column(db.Text)
     time_limit=db.Column(db.Integer)
-    recruiter_id=db.Column(db.Integer,db.ForeignKey('users.id'),nullable=False)
-    created_at=db.Column(db.DateTime,default=datetime.utcnow)
-    updated_at=db.Column(db.DateTime,default=datetime.utcnow,onupdate=datetime.utcnow)
+    description=db.Column(db.Text)
+    difficulty=db.Column(db.String(50))
     is_published=db.Column(db.Boolean,default=False)
-    category=db.Column(db.String(150))
-    difficulty=db.Column(db.String(75))
+    category=db.Column(db.String(100))
+    created_at=db.Column(db.DateTime,default=datetime.utcnow)
+    recruiter_id=db.Column(db.Integer,db.ForeignKey('users.id'),nullable=False)
+    updated_at=db.Column(db.DateTime,default=datetime.utcnow,onupdate=datetime.utcnow)
 
-    questions=db.relationship('Question',backref='assessment',lazy='select',cascade="all,delete-orphan")
-    invitations=db.relationship('Invitation',backref='assessment',lazy='select',cascade="all,delete-orphan")
+    questions=db.relationship('Question',back_populates='assessment',cascade='all,delete',lazy='select')
+    invitations=db.relationship('Invitation',backref='assessment',cascade='all,delete',lazy='select')
 
-    def __repr__(self):
-        return f"<Assessment id={self.id},title='{self.title}'difficulty={self.difficulty},recruiter_id={self.recruiter_id}>"
-        l
+    serialize_rules=('-recruiter.assessments','-questions.assessment','-invitations.assessment')
