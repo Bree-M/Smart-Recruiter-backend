@@ -24,3 +24,60 @@ def create_assessment():
 def get_assessments():
     assessments = Assessment.query.all()
     return jsonify([a.serialize() for a in assessments]), 200
+
+
+@assessment_bp.route('/<int:id>',methods=['GET'])
+@jwt_required()
+def get_password(id):
+    assessment=Assessment.query.get(id)
+    if not assessment:
+        return jsonify({'error':'Assessment ID not found!'}),404
+    return jsonify(assessment.serialie()),200
+
+@assessment_bp.route('/<int:id>',methods=['PATCH'])
+@jwt_required()
+def update_assessment(id):
+    data=request.get_json()
+    assessment=Assessment.query.get(id)
+
+    if not assessment:
+        return jsonify({'error':'Assessment Update Not Found!'}),404
+    if 'title' in data:
+        assessment.title=data['title']
+    if 'description' in data:
+        assessment.description=data['description']
+    if 'duration-minutes' in data:
+        assessment.minutes=data['dutation-minutes']
+
+
+    db.session.commit()    
+    return jsonify({'message':'Assessment Updated.'}),202
+
+
+@assessment_bp.route('/<int:id>',methods=['DELETE'])
+@jwt_required()
+def delete_assessment(id):
+    assessment=Assessment.query.get(id)
+    if not assessment:
+        return jsonify({'error':'Assessment not deleted!'}),404
+    
+    db.session.delete(assessment)
+    db.session.commit()
+    return jsonify({'message':'Assessment deleted'}),202
+
+
+@assessment_bp.route('/recruiter/<int:recruiter_id>',methods=['GET'])
+@jwt_required()
+def get_assessment_by_recruiter(recruiter_id):
+    assessments=Assessment.query.filter_by(recruiter_id=recruiter_id).all()
+    return jsonify([a.serialize() for a in assessments]),200
+
+
+
+
+
+
+
+
+
+

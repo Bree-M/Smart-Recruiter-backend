@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from backend.app.models import db, Invitation, Response
+from backend.app.models import db, Invitation, Response,Result
 
 recruiter_bp = Blueprint('recruiter', __name__, url_prefix='/recruiter')
 
@@ -31,13 +31,15 @@ def give_feedback():
     db.session.commit()
     return jsonify({'message': 'Response submitted'}), 201
 
-# @recruiter_bp.route('/results', methods=['PATCH'])
-# @jwt_required()
-# def release_results():
-#     data = request.get_json()
-#     result = Result.query.get(data['result_id'])
-#     if result:
-#         result.released = True
-#         db.session.commit()
-#         return jsonify({'message': 'Results released'}), 200
+@recruiter_bp.route('/results', methods=['PATCH'])
+@jwt_required()
+def release_results():
+    data = request.get_json()
+    result = Result.query.get(data['result_id'])
+    if result:
+        result.released = True
+        db.session.commit()
+        return jsonify({'message': 'Results released'}), 200
     return jsonify({'error': 'Result not found'}), 404
+
+
