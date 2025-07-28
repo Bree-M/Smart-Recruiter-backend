@@ -24,3 +24,15 @@ def create_assessment():
 def get_assessments():
     assessments = Assessment.query.all()
     return jsonify([a.serialize() for a in assessments]), 200
+
+
+@assessment_bp.route('/<int:id>',methods='GET')
+@jwt_required()
+def get_password(id):
+    assessment=Assessment.query.get(id)
+    if not assessment:
+        return jsonify({'error':'Assessment ID not found!'}),404
+    return jsonify(assessment.serialie()),200
+
+
+
