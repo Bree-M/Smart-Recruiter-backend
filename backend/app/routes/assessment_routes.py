@@ -54,16 +54,16 @@ def update_assessment(id):
     return jsonify({'message':'Assessment Updated.'}),202
 
 
-# @assessment_bp.route('/<int:id>',methods=['DELETE'])
-# @jwt_required()
-# def delete_assessment(id):
-#     assessment=Assessment.query.get(id)
-#     if not assessment:
-#         return jsonify({'error':'Assessment not deleted!'}),404
+@assessment_bp.route('/<int:id>',methods=['DELETE'])
+@jwt_required()
+def delete_assessment(id):
+    assessment=Assessment.query.get(id)
+    if not assessment:
+        return jsonify({'error':'Assessment not deleted!'}),404
     
-#     db.session.delete(assessment)
-#     db.session.commit()
-#     return jsonify({'message':'Assessment deleted'}),202
+    db.session.delete(assessment)
+    db.session.commit()
+    return jsonify({'message':'Assessment deleted'}),202
 
 
 
