@@ -66,6 +66,14 @@ def delete_assessment(id):
     return jsonify({'message':'Assessment deleted'}),202
 
 
+@assessment_bp.route('/recruiter/<int:recruiter_id>',methods=['GET'])
+@jwt_required()
+def get_assessment_by_recruiter(recruiter_id):
+    assessments=Assessment.query.filter_by(recruiter_id=recruiter_id).all()
+    return jsonify([a.serialize() for a in assessments]),200
+
+
+
 
 
 
