@@ -17,3 +17,5 @@ SQLAlchemy==2.0.41
 typing_extensions==4.13.2
 Werkzeug==3.0.6
 zipp==3.20.2
+export FLASK_APP=backend.app
+export FLASK_ENV=development
