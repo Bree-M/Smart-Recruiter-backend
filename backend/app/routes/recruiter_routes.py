@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from backend.app.models import db, Invitation, Response,Result
+from backend.app.models import db, Invitation, Response,Result,Submission
 
 recruiter_bp = Blueprint('recruiter', __name__, url_prefix='/recruiter')
 
@@ -42,4 +42,20 @@ def release_results():
         return jsonify({'message': 'Results released'}), 200
     return jsonify({'error': 'Result not found'}), 404
 
+
+@recruiter_bp.route('/submissions',methods=['GET'])
+@jwt_required()
+def get_my_submissions():
+    user_id=get_jwt_identity()['id']
+    submissions=Submission.query.filter_by(interviewee_id=user_id).all()
+    return jsonify([s.serialize() for s in submissions]),200
+
+@recruiter_bp.route('/submissions/<int:submission_id>',methods=['GET'])
+@jwt_required()
+def get_submission(submission_id):
+    user_id=get_jwt_identity()['id']
+    submission=Submission.query.filter_by(id=submission_id,interviewee_id=user_id).first()
+    if not submission:
+        return jsonify({'error':'Submission not found!'}),404
+    return jsonify(submission.serialize()),200
 

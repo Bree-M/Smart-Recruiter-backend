@@ -30,3 +30,29 @@ def submit_assessment():
 def view_responses(submission_id):
     responses = Response.query.filter_by(submission_id=submission_id).all()
     return jsonify([r.serialize() for r in responses]), 200
+
+@interviewee_bp.route('/submissions/<int:submission_id>',methods=['PUT'])
+@jwt_required()
+def update_submission(submission_id):
+    user_id=get_jwt_identity()['id']
+    submission=Submission.query.filter_by(id=submission_id,interviewee_id=user_id).first()
+    if not submission:
+        return jsonify({'error':'Submission not found!'}),404
+    
+    data=request.get_json()
+    submission.answers=data.get('answers',submission.answers)
+    db.session.commit()
+    return jsonify({'message':'Submissions Updated.'}),200
+
+@interviewee_bp.route('/submissions/<int:submission_id>',methods=['DELETE'])
+@jwt_required()
+def delete_submission(submission_id):
+    user_id=get_jwt_identity()['id']
+    submission=Submission.query.filter_by(id=submission_id,interviweee_id=user_id).first()
+    if not submission:
+        return jsonify({'error':'Submission Not Found!'}),404
+    
+    db.session.delete(submission)
+    db.session.commit()
+    return jsonify({'message':'Submission Deleted.'}),200
+    

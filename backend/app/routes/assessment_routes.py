@@ -28,7 +28,7 @@ def get_assessments():
 
 @assessment_bp.route('/<int:id>',methods=['GET'])
 @jwt_required()
-def get_password(id):
+def get_assessment(id):
     assessment=Assessment.query.get(id)
     if not assessment:
         return jsonify({'error':'Assessment ID not found!'}),404
