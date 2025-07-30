@@ -70,4 +70,12 @@ def delete_submission(submission_id):
     db.session.delete(submission)
     db.session.commit()
     return jsonify({'message':'Submission Deleted.'}),200
+
+
+@interviewee_bp.route('/results',methods=['GET'])
+@jwt_required()
+def view_my_results():
+    user_id=get_jwt_identity()['id']
+    results=Result.query.filter_by(interviewee_id=user_id,released=True).all()
+    return jsonify([r.serialize() for r in results]),200
     
