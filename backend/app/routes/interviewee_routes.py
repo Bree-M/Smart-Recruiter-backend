@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
-from backend.app.models import db, Invitation, Response,Submission,Result
+from backend.app.models import db, Invitation, Response,Submission,Result,Feedback
 
 interviewee_bp = Blueprint('interviewee', __name__, url_prefix='/interviewee')
 
@@ -78,4 +78,14 @@ def view_my_results():
     user_id=get_jwt_identity()['id']
     results=Result.query.filter_by(interviewee_id=user_id,released=True).all()
     return jsonify([r.serialize() for r in results]),200
+
+@interviewee_bp.route('/feedback/<int:submission_id>',methods=['GET'])
+@jwt_required()
+def view_feedback(submission_id):
+    user=get_jwt_identity()
+    submission=Submission.query.filter_by(id=submission_id,interviewee_id=user['id']).first()
+    if not submission:
+        return jsonify({'error':'Submission Not Found!'}),404
+    feedbacks=Feedback.query.filter_by(submission_id=submission_id).all()
+    return jsonify([f.serialize()  for f in feedbacks]),200
     

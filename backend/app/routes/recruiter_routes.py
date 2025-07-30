@@ -140,6 +140,8 @@ def delete_feedback(feedback_id):
     db.session.delete(feedback)
     db.session.commit()
     return jsonify({'message':'Feedback Deleted'}),200
+
+
     
 
 
