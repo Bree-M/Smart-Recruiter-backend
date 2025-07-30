@@ -19,12 +19,12 @@ def send_invitation():
     db.session.commit()
     return jsonify({'message': 'Invitation sent','invitation':invitation.serialize()}), 201
 
-# @recruiter_bp.route('/invitations',methods=['GET'])
-# @jwt_required()
-# def get_invitations():
-#     recruiter_id=get_jwt_identity()['id']
-#     invitations=(Invitation.query.join(Assessment).filter(Assessment.recruiter_id==recruiter_id).all())
-#     return jsonify([i.serialize() for i in invitation]),200
+@recruiter_bp.route('/invitations',methods=['GET'])
+@jwt_required()
+def get_invitations():
+    recruiter_id=get_jwt_identity()['id']
+    invitations=(Invitation.query.join(Assessment).filter(Assessment.recruiter_id==recruiter_id).all())
+    return jsonify([i.serialize() for i in invitation]),200
 
 @recruiter_bp.route('/response', methods=['POST'])
 @jwt_required()
