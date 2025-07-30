@@ -10,7 +10,7 @@ def register():
     data = request.get_json()
    
     if not data or not all(k in data for k in ['username','email','password','role']):
-        return jsonify({'error':'Field required'})
+        return jsonify({'error':'Field required'}),404
     
     if User.query.filter_by(email=data['email']).first():
         return jsonify({'error':'Email already exists'}),409
