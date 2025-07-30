@@ -12,6 +12,34 @@ def get_invitations():
     invitations = Invitation.query.filter_by(interviewee_id=user_id).all()
     return jsonify([i.serialize() for i in invitations]), 200
 
+@interviewee_bp.route('/invitations/<int:invitation_id>/accept',methods=['PATCH'])
+@jwt_required()
+def accept_invitation(invitation_id):
+    user_id=get_jwt_identity()['id']
+    invitation=Invitation.query.filter_by(id=invitation_id,interviewee_id=user_id).first()
+    if not invitation:
+        return jsonify({'error':'Invitation Not Found!'}),404
+    if invitation.status != 'pending':
+        return jsonify({'error':f'Cannot accept invitation with status {invitation.status}'}),400
+    invitation.status='accepted'
+    db.session.commit()
+    return jsonify({'message':'Invitationaccepted','invitation':invitation.serialize()}),200
+
+@interviewee_bp.route('/invitations/<int:invitation_id>/decline',method=['PATCH'])
+@jwt_required()
+def decline_invitation(invitation_id):
+    user_id=get_jwt_identity()['id']
+    invitation=Invitation.query.filter_by(id=invitation_id,interviewee_id=user_id).first()
+    if not invitation:
+        return jsonify({'error':'Invitation Not Found!'}),404
+    if invitation.status != 'pending':
+        return jsonify({'error':f'Cannot Decline Invitation With Status {invitation.status}'}),400
+    invitation.status='declined'
+    db.session.commit()
+    return jsonify({'message':'Invitation Declined','invitation':invitation.serialize()}),200
+        
+    
+
 @interviewee_bp.route('/submit', methods=['POST'])
 @jwt_required()
 def submit_assessment():
@@ -46,6 +74,20 @@ def view_responses(submission_id):
     responses = Response.query.filter_by(submission_id=submission_id).all()
     return jsonify([r.serialize() for r in responses]), 200
 
+@interviewee_bp.route('/response/<int:response_id>',methods=['PATCH'])
+@jwt_required()
+def update_my_response(response_id):
+    user=get_jwt_identity()
+    response=Response.query.get(response_id)
+    if not response:
+        return jsonify({'error':'Response Not Found!'}),404
+    if response.interviewee_id != user['id']:
+        return jsonify({'error':'Authorization Required!'}),403
+    if response.submission.status == 'submitted':
+        return jsonify({'error':'Cannot Edit Response!'}),403
+    data=request.get_json()
+    if ''
+
 @interviewee_bp.route('/submissions/<int:submission_id>',methods=['PUT'])
 @jwt_required()
 def update_submission(submission_id):
@@ -63,7 +105,7 @@ def update_submission(submission_id):
 @jwt_required()
 def delete_submission(submission_id):
     user_id=get_jwt_identity()['id']
-    submission=Submission.query.filter_by(id=submission_id,interviwee_id=user_id).first()
+    submission=Submission.query.filter_by(id=submission_id,interviewee_id=user_id).first()
     if not submission:
         return jsonify({'error':'Submission Not Found!'}),404
     

@@ -53,7 +53,7 @@ def update_assessment(id):
     if not assessment:
         return jsonify({'error':'Assessment Not Found!'}),404
     
-    if user['role'] != 'recrruiter' or assessment.recuiter_id != user['id']:
+    if user['role'] != 'recruiter' or assessment.recuiter_id != user['id']:
         return jsonify({'error':'Unauthorized!'}),403
     
     data=request.get_json()
@@ -62,7 +62,7 @@ def update_assessment(id):
         assessment.title=data['title']
     if 'description' in data:
         assessment.description=data['description']
-    if 'duration-minutes' in data:
+    if 'duration_minutes' in data:
         assessment.minutes=data['duration_minutes']
 
 

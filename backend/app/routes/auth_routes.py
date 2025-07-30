@@ -9,7 +9,7 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 def register():
     data = request.get_json()
     
-    required_fields=['username','email','password','roe']
+    required_fields=['username','email','password','role']
     if not all(field in data for field in required_fields):
         return jsonify({'error':'Username,Email,Password And Role Required!'}),404
     

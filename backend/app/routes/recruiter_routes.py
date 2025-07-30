@@ -24,7 +24,65 @@ def send_invitation():
 def get_invitations():
     recruiter_id=get_jwt_identity()['id']
     invitations=(Invitation.query.join(Assessment).filter(Assessment.recruiter_id==recruiter_id).all())
-    return jsonify([i.serialize() for i in invitation]),200
+    return jsonify([i.serialize() for i in invitations]),200
+
+@recruiter_bp.routes('/invitations',methods=['GET'])
+@jwt_required()
+def get_sent_invitations():
+    recruiter_id=get_jwt_identity()['id']
+    invitations=Invitation.query.filter_by(recruiter_id=recruiter_id).all()
+    return jsonify([i.serialize() for i in invitations]),200
+
+@recruiter_bp.route('/invitations/<int:invitation_id>',methods=['PATCH'])
+@jwt_required()
+def update_invitation(invitation_id):
+    recruiter_id=get_jwt_identity()['id']
+    invitation=Invitation.query.filter_by(id=invitation_id,recruiter_id=recruiter_id).first()
+    if not invitation:
+        return jsonify({'error':'Invitation Not Found!'}),404
+    data=request.get_json()
+    if 'status' in data:
+        invitation.status=data['status']
+    if 'scheduled_at' in data:
+        invitation.scheduled_at=data['scheduled_at'] 
+
+    db.session.commit()       
+    return jsonify({'message':'Invitation Updated','invitation':invitation.serialize()}),200
+
+
+@recruiter_bp.route('/invitations/<int:invitation_id>',methods=['DELETE'])
+@jwt_required()
+def delete_invitation(invitation_id):
+    recruiter_id=get_jwt_identity()['id']
+    invitation=Invitation.query.filter_by(id=invitation_id,recruiter_id=recruiter_id).first()
+    if not invitation:
+        return jsonify({'error':'Invitation!'}),404
+    
+    db.session.delete(invitation)
+    db.session.commit()
+    return jsonify({'message':'Invitation Deleted'}),200
+
+@recruiter_bp.route('/responses/<int:response_id>',methods=['PATCH'])
+@jwt_required()
+def update_response(response_id):
+    user=get_jwt_identity()
+    if user['role'] != 'recruiter':
+        return jsonify({'error':'Only Recruiters Can Make Updates!'}),403
+    response=Response.query.get(response_id)
+    if not response:
+        return jsonify({'error':'Response Not Found!'}),404
+    if response.submission.assessment.recruiter_id != user['id']:
+        return jsonify({'error':'Authorization Required!'}),403
+    data=request.get_json()
+    if 'answer_text' in data:
+        response.answer_text=data['answer_text']
+    if 'is_correct' in data:
+        response.is_correct=data['is_correct']    
+    if 'score_awarded' in data:
+        response.score_awarded=data['score_awarded']    
+    db.session.commit()    
+    return jsonify({'message':'Response Updates','response':response.serialize()}),200
+
 
 @recruiter_bp.route('/response', methods=['POST'])
 @jwt_required()
@@ -53,9 +111,9 @@ def release_results():
     result = Result.query.get(data['result_id'])
     if not result:
         return jsonify({'error':'Result not found'}),404
-        result.released = True
-        db.session.commit()
-        return jsonify({'message': 'Results released','result':result.serialize()}), 200
+    result.released = True
+    db.session.commit()
+    return jsonify({'message': 'Results released','result':result.serialize()}), 200
     
 
 
