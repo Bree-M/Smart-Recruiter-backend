@@ -29,11 +29,20 @@ def submit_assessment():
     db.session.commit()
     return jsonify({'message': 'Assessment submitted','submission':submission.serialize()}), 201
 
+@interviewee_bp.route('/submissions',methods=['GET'])
+@jwt_required()
+def get_my_submissions():
+    user_id=get_jwt_identity()['id']
+    submissions=Submission.query.filter_by(interviewee_id=user_id).all()
+    return jsonify([s.serialize() for s in submissions]),200
 
-
-@interviewee_bp.route('/responses/<submission_id>', methods=['GET'])
+@interviewee_bp.route('/responses/<int:submission_id>', methods=['GET'])
 @jwt_required()
 def view_responses(submission_id):
+    user_id=get_jwt_identity()['id']
+    submission=Submission.query.filter_by(id=submission_id,interviewee_id=user_id).first()
+    if not submission:
+        return jsonify({'error':'Submission Not Found!'}),404
     responses = Response.query.filter_by(submission_id=submission_id).all()
     return jsonify([r.serialize() for r in responses]), 200
 
@@ -48,7 +57,7 @@ def update_submission(submission_id):
     data=request.get_json()
     submission.answers=data.get('answers',submission.answers)
     db.session.commit()
-    return jsonify({'message':'Submissions Updated.'}),200
+    return jsonify({'message':'Submissions Updated.','submission':submission.serialize()}),200
 
 @interviewee_bp.route('/submissions/<int:submission_id>',methods=['DELETE'])
 @jwt_required()
