@@ -48,7 +48,7 @@ def update_submission(submission_id):
 @jwt_required()
 def delete_submission(submission_id):
     user_id=get_jwt_identity()['id']
-    submission=Submission.query.filter_by(id=submission_id,interviweee_id=user_id).first()
+    submission=Submission.query.filter_by(id=submission_id,interviwee_id=user_id).first()
     if not submission:
         return jsonify({'error':'Submission Not Found!'}),404
     

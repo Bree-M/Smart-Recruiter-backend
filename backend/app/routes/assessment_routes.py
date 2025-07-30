@@ -32,7 +32,7 @@ def get_assessment(id):
     assessment=Assessment.query.get(id)
     if not assessment:
         return jsonify({'error':'Assessment ID not found!'}),404
-    return jsonify(assessment.serialie()),200
+    return jsonify(assessment.serialize()),200
 
 @assessment_bp.route('/<int:id>',methods=['PATCH'])
 @jwt_required()
@@ -47,7 +47,7 @@ def update_assessment(id):
     if 'description' in data:
         assessment.description=data['description']
     if 'duration-minutes' in data:
-        assessment.minutes=data['dutation-minutes']
+        assessment.minutes=data['duration-minutes']
 
 
     db.session.commit()    
@@ -63,7 +63,7 @@ def delete_assessment(id):
     
     db.session.delete(assessment)
     db.session.commit()
-    return jsonify({'message':'Assessment deleted'}),202
+    return jsonify({'message':'Assessment deleted'}),204
 
 
 @assessment_bp.route('/recruiter/<int:recruiter_id>',methods=['GET'])
