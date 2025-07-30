@@ -53,7 +53,10 @@ def login():
     
     return jsonify({'message':'Login Successful!','access_token':access_token,'refresh_token':refresh_token,'user':user.serialize()}),200
 
-
+@auth_bp.route('/logout',methods=['POST'])
+@jwt_required()
+def log_out():
+    return jsonify({'message':'Successfully Logged Out!'}),200
 
 
 @auth_bp.route('/me', methods=['GET'])
