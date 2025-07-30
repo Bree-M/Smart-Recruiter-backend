@@ -25,7 +25,7 @@ def accept_invitation(invitation_id):
     db.session.commit()
     return jsonify({'message':'Invitationaccepted','invitation':invitation.serialize()}),200
 
-@interviewee_bp.route('/invitations/<int:invitation_id>/decline',method=['PATCH'])
+@interviewee_bp.route('/invitations/<int:invitation_id>/decline',methods=['PATCH'])
 @jwt_required()
 def decline_invitation(invitation_id):
     user_id=get_jwt_identity()['id']

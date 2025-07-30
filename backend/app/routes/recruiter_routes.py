@@ -26,7 +26,7 @@ def get_invitations():
     invitations=(Invitation.query.join(Assessment).filter(Assessment.recruiter_id==recruiter_id).all())
     return jsonify([i.serialize() for i in invitations]),200
 
-@recruiter_bp.routes('/invitations',methods=['GET'])
+@recruiter_bp.route('/invitations',methods=['GET'])
 @jwt_required()
 def get_sent_invitations():
     recruiter_id=get_jwt_identity()['id']
