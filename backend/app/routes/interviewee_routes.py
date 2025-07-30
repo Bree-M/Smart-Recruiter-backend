@@ -1,30 +1,35 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
-from backend.app.models import db, Invitation, Response,Submission
+from backend.app.models import db, Invitation, Response,Submission,Result
 
 interviewee_bp = Blueprint('interviewee', __name__, url_prefix='/interviewee')
 
 @interviewee_bp.route('/invitations', methods=['GET'])
 @jwt_required()
 def get_invitations():
-    user = get_jwt_identity()
-    invitations = Invitation.query.filter_by(interviewee_id=user['id']).all()
+    user_id = get_jwt_identity()['id']
+    invitations = Invitation.query.filter_by(interviewee_id=user_id).all()
     return jsonify([i.serialize() for i in invitations]), 200
 
 @interviewee_bp.route('/submit', methods=['POST'])
 @jwt_required()
 def submit_assessment():
     data = request.get_json()
+    user_id=get_jwt_identity()['id']
+    if not data.get('assessment_id') or data.get('answers'):
+        return jsonify({'error':'assessment_id and answers required'}),400
     submission = Submission(
-        interviewee_id=get_jwt_identity()['id'],
+        interviewee_id=user_id,
         assessment_id=data['assessment_id'],
         answers=data['answers'],
-        submitted_at=data['submitted_at']
+        submitted_at=datetime.utcnow()
     )
     db.session.add(submission)
     db.session.commit()
-    return jsonify({'message': 'Assessment submitted'}), 201
+    return jsonify({'message': 'Assessment submitted','submission':submission.serialize()}), 201
+
+
 
 @interviewee_bp.route('/responses/<submission_id>', methods=['GET'])
 @jwt_required()
