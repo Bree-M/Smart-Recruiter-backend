@@ -86,7 +86,11 @@ def update_my_response(response_id):
     if response.submission.status == 'submitted':
         return jsonify({'error':'Cannot Edit Response!'}),403
     data=request.get_json()
-    if ''
+    if 'answer_text' in data:
+        response.answer_text=data['answer_text']
+
+    db.session.commit()    
+    return jsonify({'message':'Response Updated','response':response.serialize()}),200
 
 @interviewee_bp.route('/submissions/<int:submission_id>',methods=['PUT'])
 @jwt_required()
