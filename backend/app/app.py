@@ -1,6 +1,15 @@
 from backend.app import create_app
 from flask_cors import CORS
 
-app = create_app()
+def create_app():
+    app=Flask(__name__)
+    CORS(app)
 
-CORS(app,origins=["*"])
+    @app.route('/api/recruiters')
+    def get_recruiters():
+        return [{"id":1,"name":"Test Recruiter"}],200
+    
+    return app
+app=create_app()
+
+
