@@ -5,7 +5,7 @@ def create_app():
     app=Flask(__name__)
     CORS(app)
 
-    @app.route('/api/recruiters')
+    @app.route('/api/recruiters',methods=['GET'])
     def get_recruiters():
         return [{"id":1,"name":"Test Recruiter"}],200
     
