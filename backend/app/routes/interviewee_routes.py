@@ -45,7 +45,7 @@ def decline_invitation(invitation_id):
 def submit_assessment():
     data = request.get_json()
     user_id=get_jwt_identity()['id']
-    if not data.get('assessment_id') or data.get('answers'):
+    if not data.get('assessment_id') or not data.get('answers'):
         return jsonify({'error':'assessment_id and answers required'}),400
     submission = Submission(
         interviewee_id=user_id,
@@ -122,7 +122,7 @@ def delete_submission(submission_id):
 @jwt_required()
 def view_my_results():
     user_id=get_jwt_identity()['id']
-    results=Result.query.filter_by(interviewee_id=user_id,released=True).all()
+    results=Result.query.join(Submission).filter(Submission.interviewee_id==user_id,Result.released==True).all()
     return jsonify([r.serialize() for r in results]),200
 
 @interviewee_bp.route('/feedback/<int:submission_id>',methods=['GET'])

@@ -7,16 +7,16 @@ result_bp=Blueprint('results',__name__,url_prefix='/results')
 @jwt_required()
 def get_result(submission_id):
     user=get_jwt_identity()
-    submission=Submission.query.filter_by(id=submission_id,interviewee_id=user['id']).first()
+    submission=Submission.query.get(submission_id)
     if not submission:
         return jsonify({'error':'Submission Not Found!'}),404
     
-    if user['role']=='interviewee' and submission.interviewee_id != user['id']:
-        return jsonify({'error':'Authorization Request!'}),403
-    if not submission.result:
-        return jsonify({'error':'Result Not Found!'}),404
-    if user['role'] == 'interviewee' and not submission.result.released:
-        return jsonify({'error':'Result Not Out!'}),403
+    if user['role']=='interviewee':
+        if submission.interviewee_id != user['id']:
+           return jsonify({'error':'Authorization Request!'}),403
+        if not submission.result or not submission.result.released:
+            return jsonify({'error':'Released Result Not Found!'}),404
+
     
     return jsonify(submission.result.serialize()),200
 
@@ -26,7 +26,7 @@ def get_all_results():
     user=get_jwt_identity()
     if user['role'] != 'recruiter':
         return jsonify({'error':'Only Recruiters Can View All Results!'}),403
-    results=Result.query.join(Submission).join(Submission.assessment).filter_by(recruiter_id=user['id']).all()
+    results=Result.query.join(Submission).filter(Submission.assessment.has(recruiter_id=user['id'])).all()
     return jsonify([r.serialize() for r in results]),200
 
 
@@ -68,7 +68,7 @@ def create_or_update_result(submission_id):
         message='Result Created'
 
     db.session.commit()
-    return jsonify({'message':'Result Created','result':result.serialize()}),200
+    return jsonify({'message':message,'result':result.serialize()}),200
     
 @result_bp.route('/released/<int:result_id>',methods=['PATCH'])
 @jwt_required()
