@@ -7,9 +7,12 @@ recruiter_bp = Blueprint('recruiter', __name__, url_prefix='/recruiter')
 @recruiter_bp.route('/invite', methods=['POST'])
 @jwt_required()
 def send_invitation():
-    data = request.get_json()
+    user= get_jwt_identity()
+    if user['role'] != 'recruiter':
+        return jsonify({'error':'Only Recruiters Can Send Invitations!'}),403
+    data=request.get_json()
     if not data.get('interviewee_id') or not data.get('assessment_id'):
-        return jsonify({'error':'interviewee_id and assessment_id required!'}),400
+        return jsonify({'error':'Fields Required!'}),400
     invitation = Invitation(
         interviewee_id=data['interviewee_id'],
         assessment_id=data['assessment_id'],
@@ -22,11 +25,11 @@ def send_invitation():
 @recruiter_bp.route('/invitations',methods=['GET'])
 @jwt_required()
 def get_invitations():
-    recruiter_id=get_jwt_identity()['id']
-    invitations=(Invitation.query.join(Assessment).filter(Assessment.recruiter_id==recruiter_id).all())
+    user=get_jwt_identity()
+    invitations=(Invitation.query.join(Assessment).filter(Assessment.recruiter_id==user['id']).all())
     return jsonify([i.serialize() for i in invitations]),200
 
-@recruiter_bp.route('/invitations',methods=['GET'])
+@recruiter_bp.route('/invitations/sent',methods=['GET'])
 @jwt_required()
 def get_sent_invitations():
     recruiter_id=get_jwt_identity()['id']
@@ -36,8 +39,8 @@ def get_sent_invitations():
 @recruiter_bp.route('/invitations/<int:invitation_id>',methods=['PATCH'])
 @jwt_required()
 def update_invitation(invitation_id):
-    recruiter_id=get_jwt_identity()['id']
-    invitation=Invitation.query.filter_by(id=invitation_id,recruiter_id=recruiter_id).first()
+    user=get_jwt_identity()
+    invitation=Invitation.query.join(Assessment).filter(Invitation.id==invitation_id,Assessment.recruiter_id==user['id']).first()
     if not invitation:
         return jsonify({'error':'Invitation Not Found!'}),404
     data=request.get_json()
@@ -53,10 +56,10 @@ def update_invitation(invitation_id):
 @recruiter_bp.route('/invitations/<int:invitation_id>',methods=['DELETE'])
 @jwt_required()
 def delete_invitation(invitation_id):
-    recruiter_id=get_jwt_identity()['id']
-    invitation=Invitation.query.filter_by(id=invitation_id,recruiter_id=recruiter_id).first()
+    user=get_jwt_identity()
+    invitation=Invitation.query.join(Assessment).filter(Invitation.id==invitation_id,Assessment.recruiter_id==user['id']).first()
     if not invitation:
-        return jsonify({'error':'Invitation!'}),404
+        return jsonify({'error':'Invitation Not Found!'}),404
     
     db.session.delete(invitation)
     db.session.commit()
@@ -81,22 +84,21 @@ def update_response(response_id):
     if 'score_awarded' in data:
         response.score_awarded=data['score_awarded']    
     db.session.commit()    
-    return jsonify({'message':'Response Updates','response':response.serialize()}),200
+    return jsonify({'message':'Response Updated','response':response.serialize()}),200
 
 
 @recruiter_bp.route('/response', methods=['POST'])
 @jwt_required()
 def give_feedback():
     data = request.get_json()
-    required=['question_id','submission_id','comment']
+    required=['question_id','submission_id']
     if not all(field in data for field in required):
-        return jsonify({'error':'question_id,submission_id and comment required!'}),400
+        return jsonify({'error':'Fields Required!'}),400
     recruiter_id=get_jwt_identity()['id']
     response = Response(
         question_id=data['question_id'],
         submission_id=data['submission_id'],
-        recruiter_id=recruiter_id,
-        comment=data['comment']
+        recruiter_id=recruiter_id
     )
     db.session.add(response)
     db.session.commit()
