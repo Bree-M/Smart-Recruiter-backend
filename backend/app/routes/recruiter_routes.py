@@ -205,5 +205,10 @@ def delete_feedback(feedback_id):
     
 
 
+recruiter_bp = Blueprint("recruiter", __name__)
+
+@recruiter_bp.route("/api/recruiters", methods=["GET"])
+def get_recruiters():
+    return jsonify({"message": "Recruiters API is working!"})
 
 
