@@ -4,7 +4,6 @@ from backend.app.models.user import User
 
 jobs_bp = Blueprint('jobs', __name__, url_prefix='/jobs')
 
-# Helper to get user info from headers (same as auth)
 def get_user_from_headers():
     user_id = request.headers.get('User-ID')
     role = request.headers.get('User-Role')

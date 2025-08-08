@@ -3,7 +3,7 @@ import requests
 
 codewars_bp = Blueprint('codewars', __name__, url_prefix='/codewars')
 
-@codewars_bp.route('/<username>', methods=['GET'])
+@codewars_bp.route('/user/<username>', methods=['GET'])
 def get_codewars_user(username):
     url = f"https://www.codewars.com/api/v1/users/{username}"
     try:
