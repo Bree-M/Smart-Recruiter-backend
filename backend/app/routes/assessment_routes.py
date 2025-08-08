@@ -1,104 +1,97 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
 from backend.app.models import db, Assessment
+from backend.app.models.user import User
 
-assessment_bp = Blueprint('assessments', __name__, url_prefix='/assessments')
+assessment_bp = Blueprint('assessment', __name__, url_prefix='/assessments')
+
+def get_user_from_headers():
+    user_id = request.headers.get('User-ID')
+    user_role = request.headers.get('User-Role')
+    if not user_id or not user_role:
+        return None
+    try:
+        user = User.query.get(int(user_id))
+    except Exception:
+        return None
+    if user and user.role == user_role:
+        return user
+    return None
+
 
 @assessment_bp.route('/', methods=['POST'])
-@jwt_required()
 def create_assessment():
-    user = get_jwt_identity()
-    if user['role'] != 'recruiter':
-        return jsonify({'error':'Only Recruiters Can Create Assessments!'}),403
-    data=request.get_json()
-    required_fields=['title','description','duration_minutes']
-    if not all(field in data for field in required_fields):
-        return jsonify({'error':'Title,Description and Durationn_minutes Required!'})
-    
+    user = get_user_from_headers()
+    if not user or user.role != 'recruiter':
+        return jsonify({'error': 'Recruiter access required'}), 403
+
+    data = request.get_json() or {}
+    title = data.get('title')
+    description = data.get('description')
+    if not title or not description:
+        return jsonify({'error': 'Title and description are required'}), 400
+
     assessment = Assessment(
-        title=data['title'],
-        description=data['description'],
-        duration_minutes=data['duration_minutes'],
-        recruiter_id=user['id']
+        title=title,
+        description=description,
+        time_limit=data.get('time_limit'),
+        difficulty=data.get('difficulty'),
+        is_published=data.get('is_published', False),
+        category=data.get('category'),
+        recruiter_id=user.id
     )
     db.session.add(assessment)
     db.session.commit()
-    return jsonify({'message': 'Assessment created','assessment':assessment.serialize()}), 201
+
+    return jsonify({'message': 'Assessment created', 'assessment': assessment.serialize()}), 201
+
 
 @assessment_bp.route('/', methods=['GET'])
-@jwt_required()
-def get_assessments():
-    user=get_jwt_identity()
-    query=Assessment.query
-    if user['role'] == 'recruiter':
-        query=query.filter_by(recruiter_id=user['id'])
-    assessments = query.all()
+def list_assessments():
+    assessments = Assessment.query.order_by(Assessment.created_at.desc()).all()
     return jsonify([a.serialize() for a in assessments]), 200
 
 
-@assessment_bp.route('/<int:id>',methods=['GET'])
-@jwt_required()
-def get_assessment(id):
-    assessment=Assessment.query.get(id)
+@assessment_bp.route('/<int:assessment_id>', methods=['GET'])
+def get_assessment(assessment_id):
+    assessment = Assessment.query.get(assessment_id)
     if not assessment:
-        return jsonify({'error':'Assessment ID not found!'}),404
-    return jsonify(assessment.serialize()),200
+        return jsonify({'error': 'Assessment not found'}), 404
+    return jsonify(assessment.serialize()), 200
 
-@assessment_bp.route('/<int:id>',methods=['PATCH'])
-@jwt_required()
-def update_assessment(id):
-    user=get_jwt_identity()
-    assessment=Assessment.query.get(id)
 
+@assessment_bp.route('/<int:assessment_id>', methods=['PATCH'])
+def update_assessment(assessment_id):
+    user = get_user_from_headers()
+    if not user or user.role != 'recruiter':
+        return jsonify({'error': 'Recruiter access required'}), 403
+
+    assessment = Assessment.query.get(assessment_id)
     if not assessment:
-        return jsonify({'error':'Assessment Not Found!'}),404
-    
-    if user['role'] != 'recruiter' or assessment.recuiter_id != user['id']:
-        return jsonify({'error':'Unauthorized!'}),403
-    
-    data=request.get_json()
+        return jsonify({'error': 'Assessment not found'}), 404
+    if assessment.recruiter_id != user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
 
-    if 'title' in data:
-        assessment.title=data['title']
-    if 'description' in data:
-        assessment.description=data['description']
-    if 'duration_minutes' in data:
-        assessment.minutes=data['duration_minutes']
+    data = request.get_json() or {}
+    for field in ['title', 'description', 'time_limit', 'difficulty', 'is_published', 'category']:
+        if field in data:
+            setattr(assessment, field, data[field])
+
+    db.session.commit()
+    return jsonify({'message': 'Assessment updated', 'assessment': assessment.serialize()}), 200
 
 
-    db.session.commit()    
-    return jsonify({'message':'Assessment Updated.','assessment':assessment.serialize()}),200
+@assessment_bp.route('/<int:assessment_id>', methods=['DELETE'])
+def delete_assessment(assessment_id):
+    user = get_user_from_headers()
+    if not user or user.role != 'recruiter':
+        return jsonify({'error': 'Recruiter access required'}), 403
 
-
-@assessment_bp.route('/<int:id>',methods=['DELETE'])
-@jwt_required()
-def delete_assessment(id):
-    user=get_jwt_identity()
-    assessment=Assessment.query.get(id)
+    assessment = Assessment.query.get(assessment_id)
     if not assessment:
-        return jsonify({'error':'Assessment not deleted!'}),404
-    
-    if user['role'] != 'recruiter' or assessment.recruiter_id != user['id']:
-        return jsonify({'error':'Unauthorized To Delete Assessment!'}),403
-    
-    
+        return jsonify({'error': 'Assessment not found'}), 404
+    if assessment.recruiter_id != user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+
     db.session.delete(assessment)
     db.session.commit()
-    return jsonify({'message':'Assessment deleted'}),200
-
-
-@assessment_bp.route('/recruiter/<int:recruiter_id>',methods=['GET'])
-@jwt_required()
-def get_assessment_by_recruiter(recruiter_id):
-    assessments=Assessment.query.filter_by(recruiter_id=recruiter_id).all()
-    return jsonify([a.serialize() for a in assessments]),200
-
-
-
-
-
-
-
-
-
-
+    return jsonify({'message': 'Assessment deleted'}), 200

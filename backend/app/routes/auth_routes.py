@@ -3,14 +3,24 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from backend.app import db
 from backend.app.models.user import User
 from functools import wraps
+import jwt
+import datetime
+from flask import current_app
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 def get_current_user():
-    user_id = request.headers.get("User-ID") 
-    if not user_id:
+    token = request.headers.get('Authorization')
+    if not token:
         return None
-    return db.session.get(User, user_id)
+    try:
+        data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+        return db.session.get(User, data['user_id'])
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
 
 
 def recruiter_required(f):
@@ -30,6 +40,19 @@ def candidate_required(f):
             return jsonify({'error': 'Candidate access required'}), 403
         return f(*args, **kwargs)
     return decorated_function
+
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        user = get_current_user()
+        if not user:
+            return jsonify({'error': 'Unauthorized'}), 401
+        request.user = user
+        return f(*args, **kwargs)
+    return decorated
+
+
 
 
 @auth_bp.route('/register', methods=['POST'])
@@ -58,18 +81,24 @@ def register():
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    if not data or not data.get('email') or not data.get('password'):
-        return jsonify({'error': 'Missing email or password'}), 400
-
     user = User.query.filter_by(email=data['email']).first()
-    if not user or not check_password_hash(user.password_hash, data['password']):
-        return jsonify({'error': 'Invalid credentials'}), 401
+
+    if not user or not user.check_password(data['password']):
+        return jsonify({'error': 'Invalid email or password'}), 401
+
+    token = jwt.encode({
+        'user_id': user.id,
+        'role': user.role,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=current_app.config['JWT_EXPIRATION_HOURS'])
+    }, current_app.config['SECRET_KEY'], algorithm='HS256')
 
     return jsonify({
         'message': 'Login successful',
+        'role': user.role,
         'user_id': user.id,
-        'role': user.role
-    }), 200
+        'token': token
+    })
+
 
 @auth_bp.route('/logout', methods=['POST'])
 def logout():
