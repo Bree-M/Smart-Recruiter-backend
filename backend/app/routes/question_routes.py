@@ -25,27 +25,24 @@ def create_question():
 
     data = request.get_json() or {}
     assessment_id = data.get('assessment_id')
-    question_text = data.get('question_text')
-    question_type = data.get('question_type')
-    choices = data.get('choices') 
+    text = data.get('text')
+    question_type = data.get('question_type', 'multiple_choice')
+    options = data.get('options') 
     correct_answer = data.get('correct_answer')
     points = data.get('points', 1)
 
-    if not assessment_id or not question_text or not question_type:
-        return jsonify({'error': 'assessment_id, question_text, and question_type are required'}), 400
+    if not assessment_id or not text:
+        return jsonify({'error': 'assessment_id and text are required'}), 400
 
     assessment = Assessment.query.get(assessment_id)
     if not assessment or assessment.recruiter_id != user.id:
         return jsonify({'error': 'Assessment not found or unauthorized'}), 404
 
-    if question_type == 'multiple_choice' and not choices:
-        return jsonify({'error': 'Choices are required for multiple choice questions'}), 400
-
     question = Question(
         assessment_id=assessment_id,
-        question_text=question_text,
+        text=text,
         question_type=question_type,
-        choices=choices,
+        options=options,
         correct_answer=correct_answer,
         points=points
     )
@@ -54,6 +51,10 @@ def create_question():
 
     return jsonify({'message': 'Question created', 'question': question.serialize()}), 201
 
+@question_bp.route('/assessment/<int:assessment_id>', methods=['GET'])
+def list_questions_for_assessment(assessment_id):
+    questions = Question.query.filter_by(assessment_id=assessment_id).all()
+    return jsonify([q.serialize() for q in questions]), 200
 
 @question_bp.route('/<int:question_id>', methods=['GET'])
 def get_question(question_id):
@@ -61,13 +62,6 @@ def get_question(question_id):
     if not question:
         return jsonify({'error': 'Question not found'}), 404
     return jsonify(question.serialize()), 200
-
-
-@question_bp.route('/assessment/<int:assessment_id>', methods=['GET'])
-def list_questions_for_assessment(assessment_id):
-    questions = Question.query.filter_by(assessment_id=assessment_id).all()
-    return jsonify([q.serialize() for q in questions]), 200
-
 
 @question_bp.route('/<int:question_id>', methods=['PATCH'])
 def update_question(question_id):
@@ -83,14 +77,19 @@ def update_question(question_id):
         return jsonify({'error': 'Unauthorized'}), 403
 
     data = request.get_json() or {}
-
-    for field in ['question_text', 'question_type', 'choices', 'correct_answer', 'points']:
-        if field in data:
-            setattr(question, field, data[field])
+    if 'text' in data:
+        question.text = data['text']
+    if 'question_type' in data:
+        question.question_type = data['question_type']
+    if 'options' in data:
+        question.options = data['options']
+    if 'correct_answer' in data:
+        question.correct_answer = data['correct_answer']
+    if 'points' in data:
+        question.points = data['points']
 
     db.session.commit()
     return jsonify({'message': 'Question updated', 'question': question.serialize()}), 200
-
 
 @question_bp.route('/<int:question_id>', methods=['DELETE'])
 def delete_question(question_id):
@@ -107,4 +106,5 @@ def delete_question(question_id):
 
     db.session.delete(question)
     db.session.commit()
+
     return jsonify({'message': 'Question deleted'}), 200
