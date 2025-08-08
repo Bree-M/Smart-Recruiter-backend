@@ -1,65 +1,107 @@
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity,create_refresh_token
-from backend.app.models import db, User
+from backend.app import db
+from backend.app.models.user import User
+from functools import wraps
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
+
+def get_current_user():
+    user_id = request.headers.get("User-ID") 
+    if not user_id:
+        return None
+    return db.session.get(User, user_id)
+
+
+def recruiter_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        user = get_current_user()
+        if not user or user.role != 'recruiter':
+            return jsonify({'error': 'Recruiter access required'}), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
+def candidate_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        user = get_current_user()
+        if not user or user.role != 'candidate':
+            return jsonify({'error': 'Candidate access required'}), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    
-    required_fields=['username','email','password','role']
-    if not all(field in data for field in required_fields):
-        return jsonify({'error':'Username,Email,Password And Role Required!'}),404
-    
-    if User.query.filter_by(email=data['email']).first():
-        return jsonify({'error':'Email already exists'}),409
-    
-    if User.query.filter_by(username=data['username']).first():
-        return jsonify({'error':'Username aleady taken!'}),409
-    
-    if data['role'] not in ['recruiter','candidate']:
-        return jsonify({'error':'Role Must Be Either Recruiter Or Candidate!'}),400
+    if not data or not data.get('username') or not data.get('email') or not data.get('password') or not data.get('role'):
+        return jsonify({'error': 'Missing required fields'}), 400
 
+    if User.query.filter((User.username == data['username']) | (User.email == data['email'])).first():
+        return jsonify({'error': 'User already exists'}), 400
+
+    hashed_password = generate_password_hash(data['password'])
     user = User(
         username=data['username'],
         email=data['email'],
-        profile_picture_url=data.get('profile_picture_url'),
-        bio=data.get('bio'),
-        about_me=data.get('about_me'),
-        company_name=data.get('company_name'),
-        skills=data.get('skills'),
+        password_hash=hashed_password,
         role=data['role']
     )
-
     user.set_password(data['password'])
-
     db.session.add(user)
     db.session.commit()
-    return jsonify({'message': 'User registered','user':user.serialize()}), 201
+
+    return jsonify({'message': 'User registered successfully', 'user_id': user.id}), 201
+
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    if not all(field in data for field in ['email','password']):
-        return jsonify ({'error':'Email And Password required!'})
-    user = User.query.filter_by(email=data['email']).first()
-    if not user or not user.check_password(data['password']):
-        return jsonify({'error': 'Invalid Entries!'}),401
-                        
-    access_token=create_access_token(identity={'id':user.id,'role':user.role})
-    refresh_token=create_refresh_token(identity={'id':user.id,'role':user.role})
-    
-    return jsonify({'message':'Login Successful!','access_token':access_token,'refresh_token':refresh_token,'user':user.serialize()}),200
+    if not data or not data.get('email') or not data.get('password'):
+        return jsonify({'error': 'Missing email or password'}), 400
 
-@auth_bp.route('/logout',methods=['POST'])
-@jwt_required()
-def log_out():
-    return jsonify({'message':'Successfully Logged Out!'}),200
+    user = User.query.filter_by(email=data['email']).first()
+    if not user or not check_password_hash(user.password_hash, data['password']):
+        return jsonify({'error': 'Invalid credentials'}), 401
+
+    return jsonify({
+        'message': 'Login successful',
+        'user_id': user.id,
+        'role': user.role
+    }), 200
+
+@auth_bp.route('/logout', methods=['POST'])
+def logout():
+    return jsonify({'message': 'User logged out successfully'}), 200
 
 
 @auth_bp.route('/me', methods=['GET'])
-@jwt_required()
 def me():
-    return jsonify(get_jwt_identity()), 200
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'Unauthorized'}), 401
+    return jsonify(user.to_dict()), 200
+
+@auth_bp.route('/dashboard', methods=['GET'])
+def dashboard():
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    if user.role == 'recruiter':
+        return jsonify({'message': 'Welcome to the Recruiter dashboard'}), 200
+    elif user.role == 'candidate':
+        return jsonify({'message': 'Welcome to the Candidate dashboard'}), 200
+    else:
+        return jsonify({'error': 'Invalid role'}), 400
+
+@auth_bp.route('/recruiter-area', methods=['GET'])
+@recruiter_required
+def recruiter_area():
+    return jsonify({'message': 'This is the recruiter-only area'}), 200
+
+@auth_bp.route('/candidate-area', methods=['GET'])
+@candidate_required
+def candidate_area():
+    return jsonify({'message': 'This is the candidate-only area'}), 200

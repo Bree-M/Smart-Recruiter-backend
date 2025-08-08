@@ -1,31 +1,20 @@
-from backend.app.models import db
-from datetime import datetime
+from backend.app import db
 from sqlalchemy_serializer import SerializerMixin
 
-class Submission(db.Model):
-    __tablename__='submissions'
+class Submission(db.Model, SerializerMixin):
+    __tablename__ = 'submissions'
 
-    id=db.Column(db.Integer,primary_key=True)
-    interviewee_id=db.Column(db.Integer,db.ForeignKey('users.id'),nullable=False)
-    assessment_id=db.Column(db.Integer,db.ForeignKey('assessments.id'),nullable=False)
-    submitted_at=db.Column(db.DateTime)
-    score=db.Column(db.Integer)
-    status=db.Column(db.String(50),default='pending')
-    start_time=db.Column(db.DateTime)
-    end_time=db.Column(db.DateTime)
-    time_taken=db.Column(db.Integer)
-    answers=db.Column(db.Text)
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False) 
+    assessment_id = db.Column(db.Integer, db.ForeignKey('assessments.id'), nullable=False)
+    invitation_id = db.Column(db.Integer, db.ForeignKey('invitations.id'), nullable=True)
+    code = db.Column(db.Text, nullable=True)
+    score = db.Column(db.Float, nullable=True)
+    status = db.Column(db.String(50), default='submitted')
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
 
-    # interviewee=db.relationship('User',backref='submissions')
-    # assessment=db.relationship('Assessment',backref='submissions')
-    responses=db.relationship('Response',backref='submission',cascade="all,delete-orphan")
+    candidate = db.relationship('User', backref='submissions')
+    assessment = db.relationship('Assessment', backref='submissions')
+    invitation = db.relationship('Invitation', backref='submissions')
 
-    serialize_rules=('-interviewee.submissions','-assessment.submissions','-responses',)
-
-
-
-
-
-
-
-
+    serialize_rules = ('-candidate.password', '-assessment.submissions', '-invitation.submissions')

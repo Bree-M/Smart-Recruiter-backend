@@ -15,9 +15,10 @@ class User(db.Model, SerializerMixin):
     created_at=db.Column(db.DateTime,default=datetime.utcnow)
     about_me=db.Column(db.Text)
     profile_picture_url=db.Column(db.String(120))
-    bio=(db.Text)
+    bio=db.Column(db.Text)
     company_name=db.Column(db.String(300))
-    skills=db.Column
+    skills=db.Column(db.String)
+    password_hash=db.Column(db.String,nullable=False)
 
     assessments=db.relationship('Assessment',backref='recruiter',lazy='select')
     

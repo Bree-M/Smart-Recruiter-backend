@@ -17,6 +17,5 @@ class Assessment(db.Model,SerializerMixin):
     updated_at=db.Column(db.DateTime,default=datetime.utcnow,onupdate=datetime.utcnow)
 
     questions=db.relationship('Question',back_populates='assessment',cascade='all,delete',lazy='select')
-    invitations=db.relationship('Invitation',backref='assessment',cascade='all,delete',lazy='select')
 
     serialize_rules=('-recruiter.assessments','-questions.assessment','-invitations.assessment')
