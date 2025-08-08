@@ -35,3 +35,5 @@ class Assessment(db.Model, SerializerMixin):
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
             'recruiter_id': self.recruiter_id,
         }
+    
+

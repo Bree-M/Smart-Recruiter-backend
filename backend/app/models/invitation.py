@@ -30,3 +30,5 @@ class Invitation(db.Model, SerializerMixin):
             "candidate_username": self.candidate.username if self.candidate else None,
             "recruiter_username": self.recruiter.username if self.recruiter else None,
         }
+
+

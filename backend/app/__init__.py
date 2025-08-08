@@ -32,6 +32,10 @@ def create_app():
     from backend.app.routes.interviewee_routes import interviewee_bp
     from backend.app.routes.assessment_routes import assessment_bp
     from backend.app.routes.invitation_routes import invitation_bp
+    from backend.app.routes.question_routes import question_bp
+    from backend.app.routes.submission_routes import submission_bp
+    from backend.app.routes.result_routes import result_bp
+    from backend.app.routes.feedback_routes import feedback_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(jobs_bp)
@@ -39,6 +43,10 @@ def create_app():
     app.register_blueprint(interviewee_bp)
     app.register_blueprint(assessment_bp)
     app.register_blueprint(invitation_bp)
+    app.register_blueprint(question_bp)
+    app.register_blueprint(submission_bp)
+    app.register_blueprint(result_bp)
+    app.register_blueprint(feedback_bp)
    
 
     @app.route("/")
