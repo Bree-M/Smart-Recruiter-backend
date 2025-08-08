@@ -68,7 +68,6 @@ def get_job(job_id):
     if job.is_active:
         return jsonify(job.serialize()), 200
 
-    # Job inactive - only recruiter owner can see
     user = get_user_from_headers()
     if user and user.role == 'recruiter' and user.id == job.recruiter_id:
         return jsonify(job.serialize()), 200

@@ -8,9 +8,9 @@ class Question(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     assessment_id = db.Column(db.Integer, db.ForeignKey('assessments.id'), nullable=False)
     text = db.Column(db.Text, nullable=False)
-    question_type = db.Column(db.String(50), default='multiple_choice')  # or 'coding', 'short_answer', etc.
-    options = db.Column(db.JSON)  # For MCQ options, null otherwise
-    correct_answer = db.Column(db.String(500))  # Optional, used by recruiter for scoring
+    question_type = db.Column(db.String(50), default='multiple_choice')  
+    options = db.Column(db.JSON) 
+    correct_answer = db.Column(db.String(500)) 
     points = db.Column(db.Integer, default=1)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
