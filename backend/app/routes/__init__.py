@@ -1,4 +1,4 @@
-from backend.app.routes.auth_routes import auth_bp
+from .auth_routes import auth_bp
 from backend.app.routes.assessment_routes import assessment_bp
 from backend.app.routes.codewars_routes import codewars_bp
 from backend.app.routes.job_routes import jobs_bp

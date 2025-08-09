@@ -12,9 +12,8 @@ migrate = Migrate()
 def create_app():
     load_dotenv()
     app = Flask(__name__, instance_relative_config=True)
-    app.config.from_object('backend.app.config.Config')  
+    app.config.from_object('app.config.Config')
 
-   
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', app.config['SQLALCHEMY_DATABASE_URI'])
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', app.config['JWT_SECRET_KEY'])
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -23,29 +22,28 @@ def create_app():
 
     db.init_app(app)
     migrate.init_app(app, db)
-    CORS(app)
+    CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}})
     JWTManager(app)
 
-    from backend.app.routes.auth_routes import auth_bp
-    from backend.app.routes.job_routes import jobs_bp
-    from backend.app.routes.assessment_routes import assessment_bp
-    from backend.app.routes.invitation_routes import invitation_bp
-    from backend.app.routes.question_routes import question_bp
-    from backend.app.routes.submission_routes import submission_bp
-    from backend.app.routes.result_routes import result_bp
-    from backend.app.routes.feedback_routes import feedback_bp
-    from backend.app.routes.codewars_routes import codewars_bp 
+    from app.routes.auth_routes import auth_bp
+    from app.routes.job_routes import jobs_bp
+    from app.routes.assessment_routes import assessment_bp
+    from app.routes.invitation_routes import invitation_bp
+    from app.routes.question_routes import question_bp
+    from app.routes.submission_routes import submission_bp
+    from app.routes.result_routes import result_bp
+    from app.routes.feedback_routes import feedback_bp
+    from app.routes.codewars_routes import codewars_bp 
 
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(jobs_bp)
-    app.register_blueprint(assessment_bp)
-    app.register_blueprint(invitation_bp)
-    app.register_blueprint(question_bp)
-    app.register_blueprint(submission_bp)
-    app.register_blueprint(result_bp)
-    app.register_blueprint(feedback_bp)
-    app.register_blueprint(codewars_bp)
-   
+    app.register_blueprint(auth_bp, url_prefix='/api')
+    app.register_blueprint(jobs_bp, url_prefix='/api')
+    app.register_blueprint(assessment_bp, url_prefix='/api')
+    app.register_blueprint(invitation_bp, url_prefix='/api')
+    app.register_blueprint(question_bp, url_prefix='/api')
+    app.register_blueprint(submission_bp, url_prefix='/api')
+    app.register_blueprint(result_bp, url_prefix='/api')
+    app.register_blueprint(feedback_bp, url_prefix='/api')
+    app.register_blueprint(codewars_bp, url_prefix='/api')
 
     @app.route("/")
     def index():
